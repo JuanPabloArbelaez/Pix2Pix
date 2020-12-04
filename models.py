@@ -30,7 +30,7 @@ class ContractingBlock(nn.Module):
         self.conv1 = nn.Conv2d(input_channels, input_channels * 2, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(input_channels * 2, input_channels * 2, kernel_size=3, padding=1)
         self.activation = nn.LeakyReLU(negative_slope=0.2)
-        self.maxpool = nn.MaxPool2D(kernel_size=2, stride=2)
+        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.use_bn = use_bn
         if self.use_bn:
             self.batchnorm = nn.BatchNorm2d(input_channels * 2)
@@ -47,13 +47,13 @@ class ContractingBlock(nn.Module):
         x = self.conv1(x)
         if self.use_bn:
             x = self.batchnorm(x)
-        if self.dropout:
+        if self.use_dropout:
             x = self.dropout(x)
         x = self.activation(x)
         x = self.conv2(x)
         if self.use_bn:
             x = self.batchnorm(x)
-        if self.dropout:
+        if self.use_dropout:
             x = self.dropout(x)
         x = self.activation(x) 
         x = self.maxpool(x) 
@@ -73,6 +73,7 @@ class ExpandingBlock(nn.Module):
         self.conv2 = nn.Conv2d(input_channels, input_channels // 2, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(input_channels // 2, input_channels // 2, kernel_size=2, padding=1)
         self.activation = nn.ReLU()
+        self.use_bn = use_bn
         if self.use_bn:
             self.batchnorm = nn.BatchNorm2d(input_channels * 2)
         self.use_dropout = use_dropout
@@ -92,15 +93,15 @@ class ExpandingBlock(nn.Module):
         x = torch.cat([x, skip_con_x], axis=1)
         x = self.conv2(x)
         if self.use_bn:
-            self.batchnorm(x)
+            x = self.batchnorm(x)
         if self.use_dropout:
-            self.dropout(x)
+            x = self.dropout(x)
         x = self.activation(x)
         x = self.conv3(x)
         if self.use_bn:
-            self.batchnorm(x)
+            x = self.batchnorm(x)
         if self.use_dropout:
-            self.dropout(x)
+            x = self.dropout(x)
         x = self.activation(x)
         return x
 
@@ -127,7 +128,7 @@ class FeatureMapBlock(nn.Module):
         return x
 
 
-class UNet(n.Module):
+class UNet(nn.Module):
     """UNet  Class 
         A series of 4 contracting blocks followed by 4 expanding blocks to transform an input image 
         into the corresponding paired image, with an upfeature layter at the start, and a downfeature layer at the end

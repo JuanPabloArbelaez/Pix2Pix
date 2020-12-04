@@ -11,40 +11,83 @@ from visualize import show_tensor_images
 
 
 
-# Training
-adv_criterion = nn.BCEWithLogitsLoss()
-recon_criterion = nn.L1Loss()
+# # Training
+# adv_criterion = nn.BCEWithLogitsLoss()
+# recon_criterion = nn.L1Loss()
+# lambda_recon = 200
+# n_epochs = 300
+# input_dim = 3
+# real_dim = 3
+# display_step = 50
+# batch_size = 4
+# lr = 2e-4
+# target_shape = 256
+# device = "cuda"
+
+adv_criterion = nn.BCEWithLogitsLoss() 
+recon_criterion = nn.L1Loss() 
 lambda_recon = 200
-n_epochs = 300
+
+n_epochs = 200
 input_dim = 3
 real_dim = 3
-display_step = 50
+display_step = 200
 batch_size = 4
-lr = 2e-4
+lr = 0.0002
 target_shape = 256
-device = "cuda"
+device = 'cuda'
 
-# Dataset
-transform = transforms.Compose([transforms.ToTensor()])
+# # Dataset
+# transform = transforms.Compose([transforms.ToTensor()])
+# dataset = torchvision.datasets.ImageFolder("maps", transform=transform)
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+])
+
 dataset = torchvision.datasets.ImageFolder("maps", transform=transform)
 
-# Initialize generator and discriminator
-gen = UNet(input_dim, real_dim).to(device)
-disc = Discriminator(input_dim + real_dim).to(device)
+# # Initialize generator and discriminator
+# gen = UNet(input_dim, real_dim).to(device)
+# disc = Discriminator(input_dim + real_dim).to(device)
 
-# Optimizers
+# # Optimizers
+# gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
+# disc_opt = torch.optim.Adam(disc.parameters(), lr=lr)
+
+# def weights_init(m):
+#     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+#         torch.nn.init.normal_(m.weight, mean=0.0, std=0.02)
+#     if isinstance(m, nn.BatchNorm2d):
+#         torch.nn.init.normal_(m.weight, mean=0.0, std=0.02)
+#         torch.nn.init.constant_(m.bias, 0)
+
+# gen = gen.apply(weights_init)
+# disc = disc.apply(weights_init)
+
+gen = UNet(input_dim, real_dim).to(device)
 gen_opt = torch.optim.Adam(gen.parameters(), lr=lr)
+disc = Discriminator(input_dim + real_dim).to(device)
 disc_opt = torch.optim.Adam(disc.parameters(), lr=lr)
 
 def weights_init(m):
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        torch.nn.init.normal_(m.weight, mean=0.0, std=0.02)
+        torch.nn.init.normal_(m.weight, 0.0, 0.02)
     if isinstance(m, nn.BatchNorm2d):
-        torch.nn.init.normal_(m.wieght, mean=0.0, std=0.02)
-        torch.nn.init.norm_(m.bias, 0)
+        torch.nn.init.normal_(m.weight, 0.0, 0.02)
+        torch.nn.init.constant_(m.bias, 0)
 
-gen = gen.apply(weights_init)
-disc = disc.apply(weights_init)
+# Feel free to change pretrained to False if you're training the model from scratch
+pretrained = False
+if pretrained:
+    loaded_state = torch.load("pix2pix_15000.pth")
+    gen.load_state_dict(loaded_state["gen"])
+    gen_opt.load_state_dict(loaded_state["gen_opt"])
+    disc.load_state_dict(loaded_state["disc"])
+    disc_opt.load_state_dict(loaded_state["disc_opt"])
+else:
+    gen = gen.apply(weights_init)
+    disc = disc.apply(weights_init)
 
 
 def train(save_model=False):
