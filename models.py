@@ -227,7 +227,7 @@ def get_gen_loss(gen, disc, real, condition, adv_criterion, recon_criterion, lam
     """
     fake = gen(condition)
     disc_fake_pred = disc(fake,  condition)
-    adv_loss = adv_loss(disc_fake_pred, torch.ones_like(disc_fake_pred))
-    recon_loss = recon_loss(real, fake)
+    adv_loss = adv_criterion(disc_fake_pred, torch.ones_like(disc_fake_pred))
+    recon_loss = recon_criterion(real, fake)
     gen_loss = adv_loss + (recon_loss * lambda_recon)
     return gen_loss
